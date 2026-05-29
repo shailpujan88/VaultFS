@@ -1,0 +1,9 @@
+.git
+.gitignore
+data
+**/data
+*.md
+.cursor
+terminals
+**/*_test.go
+**/*.test

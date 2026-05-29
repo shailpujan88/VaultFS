@@ -1,0 +1,125 @@
+services:
+  node1:
+    build: .
+    container_name: vaultfs-node1
+    hostname: node1
+    ports:
+      - "8001:8001"
+    environment:
+      VAULTFS_NODE_ID: node1
+      VAULTFS_PORT: "8001"
+      VAULTFS_DATA_DIR: /data
+      VAULTFS_PEERS: node2:8002,node3:8003
+      VAULTFS_LEADER_ID: node1
+      LEADER: "true"
+    volumes:
+      - node1-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8001/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    networks:
+      - vaultfs
+
+  node2:
+    build: .
+    container_name: vaultfs-node2
+    hostname: node2
+    ports:
+      - "8002:8002"
+    environment:
+      VAULTFS_NODE_ID: node2
+      VAULTFS_PORT: "8002"
+      VAULTFS_DATA_DIR: /data
+      VAULTFS_PEERS: node1:8001,node3:8003
+      VAULTFS_LEADER_ID: node1
+      LEADER: "false"
+    volumes:
+      - node2-data:/data
+    depends_on:
+      node1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8002/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    networks:
+      - vaultfs
+
+  node3:
+    build: .
+    container_name: vaultfs-node3
+    hostname: node3
+    ports:
+      - "8003:8003"
+    environment:
+      VAULTFS_NODE_ID: node3
+      VAULTFS_PORT: "8003"
+      VAULTFS_DATA_DIR: /data
+      VAULTFS_PEERS: node1:8001,node2:8002
+      VAULTFS_LEADER_ID: node1
+      LEADER: "false"
+    volumes:
+      - node3-data:/data
+    depends_on:
+      node1:
+        condition: service_healthy
+      node2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8003/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+    networks:
+      - vaultfs
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: vaultfs-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    depends_on:
+      node1:
+        condition: service_healthy
+      node2:
+        condition: service_healthy
+      node3:
+        condition: service_healthy
+    networks:
+      - vaultfs
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: vaultfs-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - vaultfs
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
+
+networks:
+  vaultfs:
+    driver: bridge

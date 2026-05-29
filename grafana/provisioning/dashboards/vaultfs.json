@@ -1,0 +1,72 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Request rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(vaultfs_requests_total[1m])) by (method)",
+          "legendFormat": "{{method}}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "title": "Request latency (p99)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(vaultfs_request_duration_seconds_bucket[1m])) by (le, method))",
+          "legendFormat": "{{method}}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 3,
+      "title": "Keys stored",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "vaultfs_keys_total",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
+      "title": "Replication lag",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "vaultfs_replication_lag_seconds",
+          "legendFormat": "{{peer}} @ {{instance}}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["vaultfs"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "VaultFS Cluster",
+  "uid": "vaultfs-cluster",
+  "version": 1
+}
