@@ -109,7 +109,7 @@ Numbers below were measured on a developer laptop (Windows 11, Go 1.22, 16 GB RA
 go test -bench=BenchmarkPutGet -benchmem ./internal/store/
 # HTTP load (cluster running):
 # for i in $(seq 1 1000); do curl -s -o /dev/null -X PUT localhost:8001/v1/keys/k$i \
-#   -H 'Content-Type: application/json' -d '{"value":"v"}'; done
+# -H 'Content-Type: application/json' -d '{"value":"v"}'; done
 ```
 
 | Scenario | Throughput / latency |
